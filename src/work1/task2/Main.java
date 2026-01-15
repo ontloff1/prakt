@@ -1,7 +1,5 @@
 package work1.task2;
 
-import java.util.Arrays;
-
 public class Main {
     public static void main(String[] args) {
 
@@ -11,16 +9,13 @@ public class Main {
 
         Flower[] bouquet = {rose1, rose2, tulip1};
 
-        int[] array=new int[3];
-        System.out.println(Arrays.toString(array));
         double totalCost = 0;
 
         System.out.println("Состав букета:");
 
         for (Flower currentFlower : bouquet) {
             System.out.println(currentFlower.getName() + " - " + currentFlower.getPrice());
-
-        totalCost+= currentFlower.getPrice();
+            totalCost = totalCost + currentFlower.getPrice();
         }
 
         System.out.println("-----------------");
