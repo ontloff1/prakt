@@ -8,7 +8,7 @@ public class NumberAnalyzer {
 
         Random random = new Random();
 
-        int number = random.nextInt(100,1000) ;
+        int number = random.nextInt(900) + 100;
 
         System.out.println("Сгенерированное число: " + number);
 
