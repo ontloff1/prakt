@@ -31,7 +31,10 @@ public class BookStore {
     }
 
     // 3. Завершить заказ (только если нет активных запросов)
+
     public void completeOrder(int orderId) {
+       if (orders.isEmpty()) return;
+
         Order order = null;
         // Ищем заказ по ID
         for (Order o : orders) {
