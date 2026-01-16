@@ -156,7 +156,7 @@ public class BookStore {
         System.out.println("\nЗаработано за период: " + total + "$");
     }
 
-    // 10. "Залежавшиеся" книги (на складе > 6 месяцев)
+    // 10. "Залежавшиеся" книги (на  > 6 месяцев)
     public void showStaleBooks() {
         LocalDate sixMonthsAgo = LocalDate.now().minusMonths(6);
         System.out.println("\n--- Залежавшиеся книги (более 6 мес.) ---");
