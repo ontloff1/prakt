@@ -9,9 +9,9 @@ public class MyArrayList<E> implements Iterable<E> {
     private int size;
 
     // --- 2) Конструкторы ---
+
     public MyArrayList() {
-        this.elementData = new Object[DEFAULT_CAPACITY];
-        this.size = 0;
+        this(DEFAULT_CAPACITY); // Вызываем второй конструктор (убрали дублирование)
     }
 
     public MyArrayList(int initialCapacity) {
@@ -21,17 +21,29 @@ public class MyArrayList<E> implements Iterable<E> {
     }
 
     public MyArrayList(Collection<? extends E> c) {
-        elementData = c.toArray();
-        size = elementData.length;
-        // Защита от особенностей toArray некоторых коллекций
-        if (elementData.getClass() != Object[].class) {
-            elementData = Arrays.copyOf(elementData, size, Object[].class);
+        // Добавили проверку на null, чтобы не падало
+        if (c != null && !c.isEmpty()) {
+            elementData = c.toArray();
+            size = elementData.length;
+            if (elementData.getClass() != Object[].class) {
+                elementData = Arrays.copyOf(elementData, size, Object[].class);
+            }
+        } else {
+            this.elementData = new Object[DEFAULT_CAPACITY];
+            this.size = 0;
         }
     }
 
-    public MyArrayList(E[] array) {
-        this.elementData = Arrays.copyOf(array, array.length);
-        this.size = array.length;
+    // Заменили [] на ... (теперь можно перечислять элементы через запятую)
+    @SafeVarargs
+    public MyArrayList(E... array) {
+        if (array != null && array.length > 0) {
+            this.elementData = Arrays.copyOf(array, array.length);
+            this.size = array.length;
+        } else {
+            this.elementData = new Object[DEFAULT_CAPACITY];
+            this.size = 0;
+        }
     }
 
     // --- 7) Логика расширения (x1.5) ---

@@ -86,8 +86,19 @@ public class MyHashSet<E> implements Iterable<E> {
 
     @Override
     public String toString() {
-        // Убираем "=значение" из вывода мапы
-        return map.toString().replaceAll("=" + PRESENT, "");
+        if (size() == 0) {
+            return "[]";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        Iterator<E> it = iterator();
+        while (it.hasNext()) {
+            sb.append(it.next());
+            if (it.hasNext()) {
+                sb.append(", ");
+            }
+        }
+        return sb.append(']').toString();
     }
 
     // --- 3) Iterable ---
