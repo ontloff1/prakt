@@ -21,14 +21,16 @@ public class MyArrayList<E> implements Iterable<E> {
     }
 
     public MyArrayList(Collection<? extends E> c) {
-        // Добавили проверку на null, чтобы не падало
+        // Проверяем: если коллекция существует (не null) и в ней есть элементы
         if (c != null && !c.isEmpty()) {
             elementData = c.toArray();
             size = elementData.length;
+            // Защита от бага toArray (на всякий случай оставляем, это хороший тон)
             if (elementData.getClass() != Object[].class) {
                 elementData = Arrays.copyOf(elementData, size, Object[].class);
             }
         } else {
+            // Если пришел null или пустая коллекция — просто создаем пустой массив
             this.elementData = new Object[DEFAULT_CAPACITY];
             this.size = 0;
         }

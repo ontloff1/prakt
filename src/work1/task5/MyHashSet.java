@@ -56,7 +56,9 @@ public class MyHashSet<E> implements Iterable<E> {
     public boolean addAll(Collection<? extends E> collection) {
         boolean modified = false;
         for (E e : collection) {
-            if (add(e)) modified = true;
+            // Эквивалентно: modified = modified | add(e);
+            // Если add(e) вернет true хотя бы раз, modified навсегда станет true
+            modified |= add(e);
         }
         return modified;
     }
@@ -84,20 +86,31 @@ public class MyHashSet<E> implements Iterable<E> {
         return containsAll((Collection<?>) obj); // Упрощено
     }
 
+    // ИСПРАВЛЕНИЕ: Используем StringBuilder для эффективной сборки строки
     @Override
     public String toString() {
+        // Если пусто — сразу возвращаем скобки
         if (size() == 0) {
             return "[]";
         }
+
         StringBuilder sb = new StringBuilder();
         sb.append('[');
+
+        // Используем наш итератор, чтобы пройти по элементам
         Iterator<E> it = iterator();
         while (it.hasNext()) {
-            sb.append(it.next());
+            E e = it.next();
+            // Добавляем элемент (если элемент — это сама коллекция, пишем спец. текст, чтобы не было рекурсии)
+            sb.append(e == this ? "(this Collection)" : e);
+
+            // Если есть следующий элемент, добавляем запятую
             if (it.hasNext()) {
                 sb.append(", ");
             }
         }
+
+        // Закрываем скобку и превращаем в строку
         return sb.append(']').toString();
     }
 
