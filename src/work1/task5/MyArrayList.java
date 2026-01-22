@@ -2,87 +2,76 @@ package work1.task5;
 
 import java.util.*;
 
-// Реализуем Iterable, чтобы можно было использовать в цикле for-each
 public class MyArrayList<E> implements Iterable<E> {
     private static final int DEFAULT_CAPACITY = 10;
     private Object[] elementData;
     private int size;
 
-    // --- 2) Конструкторы ---
-
+    // --- Конструкторы ---
     public MyArrayList() {
-        this(DEFAULT_CAPACITY); // Вызываем второй конструктор (убрали дублирование)
+        this(DEFAULT_CAPACITY);
     }
 
     public MyArrayList(int initialCapacity) {
-        if (initialCapacity < 0) throw new IllegalArgumentException("Неверный размер: " + initialCapacity);
+        if (initialCapacity < 0)
+            throw new IllegalArgumentException("Неверный размер: " + initialCapacity);
         this.elementData = new Object[initialCapacity];
         this.size = 0;
     }
 
     public MyArrayList(Collection<? extends E> c) {
-        // Проверяем: если коллекция существует (не null) и в ней есть элементы
-        if (c != null && !c.isEmpty()) {
-            elementData = c.toArray();
-            size = elementData.length;
-            // Защита от бага toArray (на всякий случай оставляем, это хороший тон)
-            if (elementData.getClass() != Object[].class) {
-                elementData = Arrays.copyOf(elementData, size, Object[].class);
-            }
-        } else {
-            // Если пришел null или пустая коллекция — просто создаем пустой массив
+        if (c == null || c.isEmpty()) {
             this.elementData = new Object[DEFAULT_CAPACITY];
             this.size = 0;
+        } else {
+            Object[] a = c.toArray();
+            if (a.getClass() != Object[].class) {
+                a = Arrays.copyOf(a, a.length, Object[].class);
+            }
+            this.elementData = a;
+            this.size = a.length;
         }
     }
 
-    // Заменяем E[] на E... (это и есть аналог *args)
-    @SafeVarargs // Эта аннотация нужна, чтобы Java не ругалась на дженерики в varargs
+    @SafeVarargs
     public MyArrayList(E... array) {
-        if (array != null && array.length > 0) {
+        if (array == null || array.length == 0) {
+            this.elementData = new Object[DEFAULT_CAPACITY];
+            this.size = 0;
+        } else {
             this.elementData = Arrays.copyOf(array, array.length);
             this.size = array.length;
-        } else {
-            this.elementData = new Object[DEFAULT_CAPACITY];
-            this.size = 0;
         }
     }
 
-    // --- 7) Логика расширения (x1.5) ---
-    private void ensureCapacity(int minCapacity) {
-        if (minCapacity - elementData.length > 0) {
-            int oldCapacity = elementData.length;
-            // Увеличение в 1.5 раза: old + old / 2
-            int newCapacity = oldCapacity + (oldCapacity >> 1);
-            if (newCapacity - minCapacity < 0) newCapacity = minCapacity;
-            elementData = Arrays.copyOf(elementData, newCapacity);
-        }
-    }
-
-    // --- 4) Реализация методов ---
-
+    // --- Публичные методы ---
     public boolean add(E element) {
         ensureCapacity(size + 1);
         elementData[size++] = element;
         return true;
     }
 
-    public boolean add(int index, E element) {
+    public void add(int index, E element) {
         checkIndexForAdd(index);
         ensureCapacity(size + 1);
         System.arraycopy(elementData, index, elementData, index + 1, size - index);
         elementData[index] = element;
         size++;
-        return true;
     }
 
     public boolean addAll(Collection<? extends E> collection) {
+        if (collection == null || collection.isEmpty()) {
+            return false;
+        }
         Object[] a = collection.toArray();
+        if (a.getClass() != Object[].class) {
+            a = Arrays.copyOf(a, a.length, Object[].class);
+        }
         int numNew = a.length;
         ensureCapacity(size + numNew);
         System.arraycopy(a, 0, elementData, size, numNew);
         size += numNew;
-        return numNew != 0;
+        return true;
     }
 
     @SuppressWarnings("unchecked")
@@ -93,29 +82,18 @@ public class MyArrayList<E> implements Iterable<E> {
         if (numMoved > 0) {
             System.arraycopy(elementData, index + 1, elementData, index, numMoved);
         }
-        elementData[--size] = null; // Помогаем сборщику мусора (GC)
+        elementData[--size] = null;
         return oldValue;
     }
 
-    // По заданию должен возвращать E (удаленный элемент), а не boolean
-    @SuppressWarnings("unchecked")
     public E remove(E element) {
-        if (element == null) {
-            for (int i = 0; i < size; i++) {
-                if (elementData[i] == null) return remove(i);
-            }
-        } else {
-            for (int i = 0; i < size; i++) {
-                if (element.equals(elementData[i])) return remove(i);
-            }
-        }
-        return null;
+        int index = indexOf(element);
+        return index >= 0 ? remove(index) : null;
     }
 
     public boolean removeAll(Collection<?> collection) {
         boolean modified = false;
         for (Object item : collection) {
-            // Удаляем пока есть вхождения (если дубликаты)
             while (contains((E) item)) {
                 remove((E) item);
                 modified = true;
@@ -128,10 +106,11 @@ public class MyArrayList<E> implements Iterable<E> {
         return size;
     }
 
-    public boolean set(int index, E element) {
+    public E set(int index, E element) {
         checkIndex(index);
+        E old = get(index);
         elementData[index] = element;
-        return true;
+        return old;
     }
 
     @SuppressWarnings("unchecked")
@@ -154,15 +133,14 @@ public class MyArrayList<E> implements Iterable<E> {
         return indexOf(element) >= 0;
     }
 
-    public boolean containsAll(Collection<E> collection) {
-        for (E e : collection) {
-            if (!contains(e)) return false;
+    public boolean containsAll(Collection<?> collection) {
+        for (Object e : collection) {
+            if (!contains((E) e)) return false;
         }
         return true;
     }
 
-    // Вспомогательный метод для поиска индекса
-    private int indexOf(E element) {
+    public int indexOf(E element) {
         if (element == null) {
             for (int i = 0; i < size; i++)
                 if (elementData[i] == null) return i;
@@ -173,17 +151,6 @@ public class MyArrayList<E> implements Iterable<E> {
         return -1;
     }
 
-    private void checkIndex(int index) {
-        if (index >= size || index < 0)
-            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
-    }
-
-    private void checkIndexForAdd(int index) {
-        if (index > size || index < 0)
-            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
-    }
-
-    // --- 3) Iterable ---
     @Override
     public Iterator<E> iterator() {
         return new Iterator<E>() {
@@ -203,15 +170,13 @@ public class MyArrayList<E> implements Iterable<E> {
         };
     }
 
-    // --- 6) hashCode и equals ---
     @Override
     public int hashCode() {
-        int hashCode = 1;
+        int h = 1;
         for (int i = 0; i < size; i++) {
-            E e = get(i);
-            hashCode = 31 * hashCode + (e == null ? 0 : e.hashCode());
+            h = 31 * h + (elementData[i] == null ? 0 : elementData[i].hashCode());
         }
-        return hashCode;
+        return h;
     }
 
     @Override
@@ -228,14 +193,29 @@ public class MyArrayList<E> implements Iterable<E> {
 
     @Override
     public String toString() {
-        if (size == 0) return "[]";
-        StringBuilder sb = new StringBuilder();
-        sb.append('[');
+        StringJoiner sj = new StringJoiner(", ", "[", "]");
         for (int i = 0; i < size; i++) {
-            sb.append(elementData[i]);
-            if (i == size - 1) return sb.append(']').toString();
-            sb.append(", ");
+            sj.add(String.valueOf(elementData[i]));
         }
-        return sb.toString();
+        return sj.toString();
+    }
+
+    // --- Приватные методы ---
+    private void ensureCapacity(int minCapacity) {
+        if (minCapacity <= elementData.length) return;
+        int oldCapacity = elementData.length;
+        int newCapacity = oldCapacity + (oldCapacity >> 1);
+        if (newCapacity < minCapacity) newCapacity = minCapacity;
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }
+
+    private void checkIndex(int index) {
+        if (index >= size || index < 0)
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+    }
+
+    private void checkIndexForAdd(int index) {
+        if (index > size || index < 0)
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
     }
 }
